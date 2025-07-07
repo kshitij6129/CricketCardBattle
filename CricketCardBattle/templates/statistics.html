@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block title %}Game Statistics - Cricket Cards{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="display-5">
+                    <i class="fas fa-chart-line text-primary me-3"></i>
+                    Game Statistics
+                </h1>
+                <p class="lead">Your performance against the smart bot</p>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card stats-card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-gamepad fa-2x text-primary mb-2"></i>
+                            <h4>{{ user_stats.games_played }}</h4>
+                            <small class="text-muted">Games Played</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-trophy fa-2x text-success mb-2"></i>
+                            <h4>{{ user_stats.games_won }}</h4>
+                            <small class="text-muted">Games Won</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-percentage fa-2x text-warning mb-2"></i>
+                            <h4>{{ "%.1f"|format(user_stats.win_rate) }}%</h4>
+                            <small class="text-muted">Win Rate</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-fire fa-2x text-danger mb-2"></i>
+                            <h4>{{ user_stats.current_streak }}</h4>
+                            <small class="text-muted">Current Streak</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Chart -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-area me-2"></i>Performance Over Time
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Detailed Statistics -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-chart-pie me-2"></i>Stat Selection Preferences
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Batting</span>
+                                    <span>{{ user_stats.batting_selections }}%</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-primary" style="width: {{ user_stats.batting_selections }}%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Bowling</span>
+                                    <span>{{ user_stats.bowling_selections }}%</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" style="width: {{ user_stats.bowling_selections }}%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Fielding</span>
+                                    <span>{{ user_stats.fielding_selections }}%</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-warning" style="width: {{ user_stats.fielding_selections }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-target me-2"></i>Round Win Rates by Stat
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Batting Rounds</span>
+                                    <span>{{ user_stats.batting_win_rate }}%</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-primary" style="width: {{ user_stats.batting_win_rate }}%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Bowling Rounds</span>
+                                    <span>{{ user_stats.bowling_win_rate }}%</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" style="width: {{ user_stats.bowling_win_rate }}%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Fielding Rounds</span>
+                                    <span>{{ user_stats.fielding_win_rate }}%</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-warning" style="width: {{ user_stats.fielding_win_rate }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Mode Statistics -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-gamepad me-2"></i>Game Mode Performance
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="mode-stats-card quick-mode">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-bolt fa-2x text-warning mb-2"></i>
+                                    <h5>Quick Match</h5>
+                                    <div class="row mt-3">
+                                        <div class="col-6">
+                                            <h6>{{ user_stats.quick_games_played }}</h6>
+                                            <small>Played</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <h6>{{ user_stats.quick_games_won }}</h6>
+                                            <small>Won</small>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            Win Rate: {{ "%.1f"|format(user_stats.quick_win_rate) }}%
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mode-stats-card classic-mode">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-crown fa-2x text-success mb-2"></i>
+                                    <h5>Classic Battle</h5>
+                                    <div class="row mt-3">
+                                        <div class="col-6">
+                                            <h6>{{ user_stats.classic_games_played }}</h6>
+                                            <small>Played</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <h6>{{ user_stats.classic_games_won }}</h6>
+                                            <small>Won</small>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            Win Rate: {{ "%.1f"|format(user_stats.classic_win_rate) }}%
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Achievements -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-medal me-2"></i>Achievements
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for achievement in achievements %}
+                        <div class="col-md-4">
+                            <div class="achievement-card {{ 'unlocked' if achievement.unlocked else 'locked' }}">
+                                <div class="card-body text-center">
+                                    <i class="fas {{ achievement.icon }} fa-2x mb-2"></i>
+                                    <h6>{{ achievement.title }}</h6>
+                                    <small class="text-muted">{{ achievement.description }}</small>
+                                    {% if achievement.unlocked %}
+                                    <div class="mt-2">
+                                        <span class="badge bg-success">Unlocked!</span>
+                                    </div>
+                                    {% else %}
+                                    <div class="mt-2">
+                                        <span class="badge bg-secondary">{{ achievement.progress }}/{{ achievement.target }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reset Statistics -->
+            <div class="text-center">
+                <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#resetModal">
+                    <i class="fas fa-trash-alt me-2"></i>Reset Statistics
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Confirmation Modal -->
+<div class="modal fade" id="resetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reset Statistics</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to reset all your game statistics? This action cannot be undone.</p>
+                <p class="text-warning"><i class="fas fa-exclamation-triangle me-2"></i>All your achievements and progress will be lost!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('reset_statistics') }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Reset All Statistics</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Performance Chart
+const ctx = document.getElementById('performanceChart').getContext('2d');
+const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ game_history.dates | safe }},
+        datasets: [{
+            label: 'Win Rate %',
+            data: {{ game_history.win_rates | safe }},
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                labels: {
+                    color: 'white'
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                    color: 'white'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            },
+            x: {
+                ticks: {
+                    color: 'white'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
