@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Round {{ game_state.round_number }} - Cricket Cards{% endblock %}
+
+{% block content %}
+    <div class="container-fluid mt-3">
+        <!-- Game Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-3 text-center">
+                                <h5><i class="fas fa-user text-primary"></i> You</h5>
+                                <div class="score-display">{{ game_state.user_score }}</div>
+                                <small class="text-muted">{{ game_state.user_hand|length }} cards left</small>
+                            </div>
+                            <div class="col-md-6 text-center">
+                                <h4>Round {{ game_state.round_number }} / {{ game_state.total_rounds }}</h4>
+                                <div class="progress mt-2">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {{ (game_state.round_number / game_state.total_rounds * 100) }}%">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <h5><i class="fas fa-robot text-warning"></i> Bot</h5>
+                                <div class="score-display">{{ game_state.bot_score }}</div>
+                                <small class="text-muted">{{ game_state.bot_hand|length }} cards left</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stat Selection Phase -->
+        {% if game_state.current_round.phase == 'stat_selection' %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            {% if game_state.current_round.stat_chooser == 'user' %}
+                                <i class="fas fa-hand-pointer me-2"></i>Choose a stat to compare
+                            {% else %}
+                                <i class="fas fa-hourglass-half me-2"></i>Bot is choosing a stat...
+                            {% endif %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if game_state.current_round.stat_chooser == 'user' %}
+                        <form method="POST" action="{{ url_for('choose_stat') }}">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <button type="submit" name="stat" value="batting" class="btn btn-outline-primary btn-lg w-100">
+                                        <i class="fas fa-running fa-2x mb-2"></i><br>
+                                        <strong>Batting</strong>
+                                    </button>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="submit" name="stat" value="bowling" class="btn btn-outline-success btn-lg w-100">
+                                        <i class="fas fa-baseball-ball fa-2x mb-2"></i><br>
+                                        <strong>Bowling</strong>
+                                    </button>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="submit" name="stat" value="fielding" class="btn btn-outline-warning btn-lg w-100">
+                                        <i class="fas fa-hand-paper fa-2x mb-2"></i><br>
+                                        <strong>Fielding</strong>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        {% else %}
+                        <div class="text-center">
+                            <div class="spinner-border text-warning" role="status">
+                                <span class="visually-hidden">Bot thinking...</span>
+                            </div>
+                            <p class="mt-2">The bot is analyzing its cards and choosing the optimal stat...</p>
+                            <form method="POST" action="{{ url_for('choose_stat') }}">
+                                <input type="hidden" name="stat" value="{{ game_state.current_round.chosen_stat }}">
+                                <button type="submit" class="btn btn-secondary mt-2">Continue</button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Card Selection Phase -->
+        {% if game_state.current_round.phase == 'card_selection' %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cards me-2"></i>
+                            Choose your card for <strong>{{ game_state.current_round.chosen_stat.title() }}</strong>
+                            {% if 'bot_card' in game_state.current_round %}
+                                (Bot has already chosen)
+                            {% endif %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('choose_card') }}">
+                            <div class="row g-3">
+                                {% for card in game_state.user_hand %}
+                                <div class="col-md-4 col-lg-3">
+                                    <div class="cricket-card" onclick="selectCard({{ loop.index0 }})">
+                                        <div class="card-header-custom">
+                                            <h6 class="mb-0">{{ card.name }}</h6>
+                                        </div>
+                                        <div class="card-stats">
+                                            <div class="stat-row {{ 'highlight' if game_state.current_round.chosen_stat == 'batting' }}">
+                                                <span>Batting:</span>
+                                                <span class="stat-value">{{ card.batting }}</span>
+                                            </div>
+                                            <div class="stat-row {{ 'highlight' if game_state.current_round.chosen_stat == 'bowling' }}">
+                                                <span>Bowling:</span>
+                                                <span class="stat-value">{{ card.bowling }}</span>
+                                            </div>
+                                            <div class="stat-row {{ 'highlight' if game_state.current_round.chosen_stat == 'fielding' }}">
+                                                <span>Fielding:</span>
+                                                <span class="stat-value">{{ card.fielding }}</span>
+                                            </div>
+                                        </div>
+                                        <input type="radio" name="card_index" value="{{ loop.index0 }}" class="d-none">
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="text-center mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg" id="playCardButton" disabled>
+                                    <i class="fas fa-play me-2"></i>
+                                    Play Selected Card
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Quick Actions -->
+        <div class="row">
+            <div class="col-12 text-center">
+                <a href="{{ url_for('new_game') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-redo me-2"></i>New Game
+                </a>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function selectCard(index) {
+        // Clear previous selections
+        document.querySelectorAll('.cricket-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        // Select the clicked card
+        event.currentTarget.classList.add('selected');
+        document.querySelector(`input[value="${index}"]`).checked = true;
+        document.getElementById('playCardButton').disabled = false;
+    }
+</script>
+{% endblock %}
