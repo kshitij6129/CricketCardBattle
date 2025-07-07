@@ -1,6 +1,0 @@
-services:
-  - type: web
-    name: cricket-card-battle
-    env: python
-    buildCommand: ""
-    startCommand: gunicorn app:app
